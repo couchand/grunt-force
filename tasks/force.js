@@ -127,8 +127,7 @@ module.exports = function(grunt) {
 
       grunt.log.writeln('added ' + junctionInserts.length + ' classes');
       grunt.log.writeln('waiting for all adds to complete');
-
-      return promise.all.apply(promise, junctionInserts);
+      return promise.allOrNone.call(promise, junctionInserts);
     }).then(function(new_members) {
       grunt.log.writeln('added '+new_members.length);
       grunt.log.writeln('all adds complete');
