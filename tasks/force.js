@@ -13,7 +13,8 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('force', 'Interact with a Salesforce.com environment', function(sftask) {
     var done = this.async();
     var options = this.options({
-      tests: '*Test*.cls'
+      tests: '*Test*.cls',
+      resource: '/' + this.args.slice(1).join('/')
     });
     var file_groups = this.files;
     var task;
@@ -29,6 +30,9 @@ module.exports = function(grunt) {
     }
     else if ( sftask === 'test' ) {
       task = test;
+    }
+    else if ( sftask === 'get' ) {
+      task = getArbitrary;
     }
     else {
       grunt.fail.warn('unknown task');
@@ -58,6 +62,21 @@ module.exports = function(grunt) {
       grunt.log.writeln(err);
       grunt.fail.warn('authorization error');
     });
+  }
+
+  function getArbitrary(conn, file_groups, options) {
+    var promise = new require('node-promise').Deferred();
+
+    grunt.log.writeln('getting resource ' + options.resource);
+    conn.get(options.resource).then(function(res) {
+      grunt.log.writeln(JSON.stringify(res, null, 2));
+
+      promise.resolve();
+    }, function(err) {
+      grunt.fail.warn(err);
+    });
+
+    return promise;
   }
 
   function test(conn, file_groups, options) {
