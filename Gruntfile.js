@@ -30,21 +30,17 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     force: {
-      default_options: {
+      staging: {
+        all: ['test/fixtures/*.cls'],
         options: {
-        },
-        files: {
-          'tmp/default_options': ['test/fixtures/testing', 'test/fixtures/123'],
-        },
+          credentials: 'test/creds/staging.js'
+        }
       },
-      custom_options: {
+      production: {
+        all: ['test/fixtures/*.cls'],
         options: {
-          separator: ': ',
-          punctuation: ' !!!',
-        },
-        files: {
-          'tmp/custom_options': ['test/fixtures/testing', 'test/fixtures/123'],
-        },
+          credentials: 'test/creds/production.js'
+        }
       },
     },
 
