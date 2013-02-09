@@ -76,6 +76,8 @@ grunt force:some_environment:test
 grunt force:some_environment:get:sobjects:account:describe
 ```
 
+It is suggested that you alias tasks used frequently.  See `example/` for an example.
+
 #### Default Options
 In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
 
