@@ -14,20 +14,27 @@ module.exports = function(grunt) {
     var done = this.async();
     var options = this.options();
     var file_groups = this.files;
+    var task;
 
     grunt.log.writeln('force plugin executing task '+sftask);
 
-    if ( sftask !== 'deploy' && sftask !== 'validate' ) {
+    if ( sftask === 'validate' ) {
+      options.isCheck = true;
+      task = deploy;
+    }
+    else if ( sftask === 'deploy' ) {
+      task = deploy;
+    }
+    else if ( sftask === 'test' ) {
+      task = test;
+    }
+    else {
       grunt.fail.warn('unknown task');
       return 42;
     }
 
-    if ( sftask === 'validate' ) {
-      options.isCheck = true;
-    }
-
     login(options).then(function(conn) {
-      return deploy(conn, file_groups, options);
+      return task(conn, file_groups, options);
     }).then(done);
   });
 
@@ -46,6 +53,38 @@ module.exports = function(grunt) {
     return sfdc.connect(creds).then(function(c) {
       grunt.log.writeln('logged in successfully');
       return c;
+    });
+  }
+
+  function test(conn, file_groups, options) {
+    var promise = require('node-promise');
+    var data = {};
+
+    grunt.log.writeln('running tests');
+
+    var testRuns = [];
+
+    // Iterate over all specified file groups.
+    file_groups.forEach(function(fileObj) {
+      // The source files to be concatenated. The "nonull" option is used
+      // to retain invalid files/patterns so they can be warned about.
+      var files = grunt.file.expand({nonull: true}, fileObj.src);
+
+      files.map(function(filepath) {
+        var class_name = filepath.match(/\/([^\/]*)\.cls$/)[1];
+
+        testRuns.push(conn.test(class_name));
+      });
+    });
+
+    return promise.allOrNone.apply(promise, testRuns).then(function(runs) {
+      runs.forEach(function(results) {
+        results.forEach(function(res) {
+          var test_result = 'Test ' + res.ApexClass.Name + '.' + res.MethodName + ': ' + res.Outcome +
+                            (res.Outcome !== 'Pass' ? "\n" + res.Message + '. ' + res.StackTrace : '');
+          grunt.log.writeln(test_result);
+        });
+      });
     });
   }
 
