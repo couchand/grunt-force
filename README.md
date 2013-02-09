@@ -10,7 +10,7 @@ Not yet on NPM.  When it is you'll be able to install it easily.  For now, fork.
 From the same directory as your project's [Gruntfile][Getting Started] and [package.json][], install this plugin with the following command:
 
 ```bash
-// won't work! not on npm yet!
+# won't work! not on npm yet!
 npm install grunt-force --save-dev
 ```
 
