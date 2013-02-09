@@ -5,9 +5,12 @@
 ## Getting Started
 _If you haven't used [grunt][] before, be sure to check out the [Getting Started][] guide._
 
+Not yet on NPM.  When it is you'll be able to install it easily.  For now, fork.
+
 From the same directory as your project's [Gruntfile][Getting Started] and [package.json][], install this plugin with the following command:
 
 ```bash
+// won't work! not on npm yet!
 npm install grunt-force --save-dev
 ```
 
@@ -32,10 +35,13 @@ In your project's Gruntfile, add a section named `force` to the data object pass
 grunt.initConfig({
   force: {
     options: {
-      // Task-specific options go here.
+      // General options go here
     },
-    your_target: {
-      // Target-specific file lists and/or options go here.
+    some_environment: {
+      src: ['path/to/files/*.cls']
+      options: {
+        credentials: 'credentials_file.json'
+      }
     },
   },
 })
@@ -43,19 +49,32 @@ grunt.initConfig({
 
 ### Options
 
-#### options.separator
+#### options.credentials
+Type: `File`
+
+The JSON file holding OAuth and user credentials.
+
+#### options.isCheck
+Type: `Boolean`
+Default value: task-dependent
+
+Validate only, do not deploy.
+
+#### options.resource
 Type: `String`
-Default value: `',  '`
 
-A string value that is used to do something with whatever.
-
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
+The resource to fetch with the get task.
 
 ### Usage Examples
+
+The basic targets available are `deploy`, `validate`, and `test`.  There is also a `get` utility target.  Assuming you have set up your configuration for `some_environment` as above and created the relevant credentials file, you should be able to invoke targets like this:
+
+```bash
+grunt force:some_environment:validate
+grunt force:some_environment:deploy
+grunt force:some_environment:test
+grunt force:some_environment:get:sobjects:account:describe
+```
 
 #### Default Options
 In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
