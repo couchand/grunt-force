@@ -30,14 +30,17 @@ module.exports = function(grunt) {
 
     // Configuration to be run (and then tested).
     force: {
+      options: {
+        container: 'test_container'
+      },
       staging: {
-        all: ['test/fixtures/*.cls'],
+        src: ['test/fixtures/*.cls'],
         options: {
           credentials: 'test/creds/staging.js'
         }
       },
       production: {
-        all: ['test/fixtures/*.cls'],
+        src: ['test/fixtures/*.cls'],
         options: {
           credentials: 'test/creds/production.js'
         }

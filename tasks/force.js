@@ -15,11 +15,7 @@ module.exports = function(grunt) {
     var options = this.options();
     var sfdc = require('../lib/force-0.1.0.js');
     var promise = require('node-promise');
-
-    var files = grunt.file.expand(grunt.config.get('force.'+this.target+'.all'));
-    if ( !files || files.length == 0 ) {
-      return;
-    }
+    var file_groups = this.files;
 
     grunt.log.writeln('force plugin executing task '+sftask);
     grunt.log.writeln('loading credentials from '+options.credentials);
@@ -43,34 +39,67 @@ module.exports = function(grunt) {
       grunt.log.writeln('logged in successfully');
       conn = c;
 
-      return conn.tooling.insert('MetadataContainer',{'Name':'itefdsjkfdjstContainer'});
+      grunt.log.writeln('looking for container');
+      return conn.tooling.query('select Id from MetadataContainer where Name = \'' + options.container + "'");
+    }).then(function(containers) {
+      if ( containers && containers.length ) {
+        grunt.log.writeln('found container');
+        // found container, use it
+        var now = new promise.Deferred();
+        now.resolve( containers[0].Id );
+        return now;
+      }
+      return conn.tooling.insert('MetadataContainer', { 'Name': options.container });
     }).then(function(new_id) {
 
       data.containerId = new_id;
       var junctionInserts = [];
 
       grunt.log.writeln('created MetadataContainer with Id '+new_id);
-      grunt.log.writeln('should be creating junction objects now...');
+      grunt.log.writeln('creating junction objects now...');
 
-      function newClassMember(file) {
-        var className = file.match(/\/([^\/]*)\.cls/)[1];
-        return conn.query('select Id from ApexClass where Name = \''+className+"'").then(function(classes) {
-          var classId = classes[0].Id;
-          return conn.insert('ApexClassMember', {
-          'MetadataContainerId': data.containerId,
-          'ContentEntityId': classId,
-          'Body': grunt.file.read(file)
-          })
+      // Iterate over all specified file groups.
+      file_groups.forEach(function(fileObj) {
+        // The source files to be concatenated. The "nonull" option is used
+        // to retain invalid files/patterns so they can be warned about.
+        var files = grunt.file.expand({nonull: true}, fileObj.src);
+
+        files.map(function(filepath) {
+          var class_name = filepath.match(/\/([^\/]*)\.cls$/)[1];
+
+          // Warn if a source file/pattern was invalid.
+          if (!grunt.file.exists(filepath)) {
+            grunt.log.error('Source file "' + filepath + '" not found.');
+            return '';
+          }
+
+          grunt.log.writeln('adding class ' + class_name);
+
+          junctionInserts.push(
+            conn.query('select Id from ApexClass where Name = \''+class_name+"'").then(function(classes) {
+              var classId = classes[0].Id;
+              grunt.log.writeln('found class '+class_name+' with id '+classId);
+
+              return conn.insert('ApexClassMember', {
+                'MetadataContainerId': data.containerId,
+                'ContentEntityId': classId,
+                'Body': grunt.file.read(filepath)
+              });
+            })
+          );
         });
-      }
+      });
 
-      for ( var i = 0; i < files.length; i++ ) {
-        grunt.log.writeln('adding file '+files[i]);
-        junctionInserts.push(newClassMember(files[i]));
-      }
+      grunt.log.writeln('waiting for all adds to complete');
 
       return promise.all.apply(promise, junctionInserts);
     }).then(function(new_members) {
+      grunt.log.writeln('all adds complete');
+
+      new_members.map(function(member) {
+        grunt.log.writeln('new member id' + member);
+      });
+
       grunt.log.writeln('submitting deployment request');
 
       return conn.tooling.deploy(data.containerId);
