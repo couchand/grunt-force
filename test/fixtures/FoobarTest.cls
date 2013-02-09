@@ -10,9 +10,11 @@
 			testFoobar = new Foobar();
 			actual = testFoobar.getValue();
 
+        testFoobar.thisone();
+
 		Test.stopTest();
 
-//		System.assertEquals( 'foobar', actual );
+		System.assertEquals( 'foobar', actual );
 	}
 
 	private static testMethod void testCustom()
@@ -27,7 +29,7 @@
 
 		Test.stopTest();
 
-//		System.assertEquals( 'baz', actual );
+		System.assertEquals( 'baz', actual );
 	}
 
 	private static testMethod void testSet()
@@ -42,6 +44,6 @@
 
 		Test.stopTest();
 
-//		System.assertEquals( 'baz', actual );
+		System.assertEquals( 'baz', actual );
 	}
 }
