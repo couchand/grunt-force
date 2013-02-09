@@ -12,7 +12,9 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('force', 'Interact with a Salesforce.com environment', function(sftask) {
     var done = this.async();
-    var options = this.options();
+    var options = this.options({
+      tests: '*Test*.cls'
+    });
     var file_groups = this.files;
     var task;
 
@@ -70,7 +72,9 @@ module.exports = function(grunt) {
       // to retain invalid files/patterns so they can be warned about.
       var files = grunt.file.expand({nonull: true}, fileObj.src);
 
-      files.map(function(filepath) {
+      var test_files = grunt.file.match({ matchBase: true }, options.tests, files);
+
+      test_files.map(function(filepath) {
         var class_name = filepath.match(/\/([^\/]*)\.cls$/)[1];
 
         testRuns.push(conn.test(class_name));
