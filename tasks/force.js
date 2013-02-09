@@ -87,7 +87,7 @@ module.exports = function(grunt) {
         results.forEach(function(res) {
           success = success && res.Outcome === 'Pass';
           var stack_trace = res.StackTrace && res.StackTrace.replace(/\n/g, "\n > ");
-          var test_result = 'Test ' + res.ApexClass.Name + '.' + res.MethodName + ': ' + res.Outcome +
+          var test_result = '' + res.ApexClass.Name + '.' + res.MethodName + ': ' + res.Outcome +
                             (res.Outcome !== 'Pass' ? ' - ' + res.Message + '.\n > ' + stack_trace : '');
           grunt.log.writeln(test_result);
         });
