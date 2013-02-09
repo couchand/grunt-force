@@ -55,6 +55,10 @@ module.exports = function(grunt) {
     return sfdc.connect(creds).then(function(c) {
       grunt.log.writeln('logged in successfully');
       return c;
+    },
+    function(err) {
+      grunt.log.writeln(err);
+      grunt.fail.warn('authorization error');
     });
   }
 
