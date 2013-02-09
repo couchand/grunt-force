@@ -130,34 +130,34 @@ module.exports = function(grunt) {
 
           junctionInserts.push(
             conn.query('select Id from ApexClass where Name = \''+class_name+"'").then(function(classes) {
-              data.classId = classes[0].Id;
-              grunt.log.writeln('found class '+class_name+' with id '+data.classId);
+              var classId = classes[0].Id;
+              grunt.log.writeln('found class '+class_name+' with id '+classId);
 
               grunt.log.writeln('searching for classmember');
               return conn.tooling.query('select Id from ApexClassMember where MetadataContainerId = \'' +
-                                        data.containerId + '\' and ContentEntityId = \'' + data.classId + "'");
-            }).then(function(acms) {
-              if ( acms && acms.length ) {
-                grunt.log.writeln('found classmember with id '+acms[0].Id);
-                var acmId = acms[0].Id;
-                return conn.tooling.update('ApexClassMember', acmId, {
-                  'Body': grunt.file.read(filepath)
-                });
-              }
-
-              grunt.log.writeln('creating classmember');
-              return conn.tooling.insert('ApexClassMember', {
-                'MetadataContainerId': data.containerId,
-                'ContentEntityId': data.classId,
-                'Body': grunt.file.read(filepath)
-              }).then(function(new_id) {
-                if ( !new_id ) {
-                  grunt.fail.fatal('error inserting junction object');
+                                  data.containerId + '\' and ContentEntityId = \'' + classId + "'").then(function(acms) {
+                if ( acms && acms.length ) {
+                  grunt.log.writeln('found classmember with id '+acms[0].Id);
+                  var acmId = acms[0].Id;
+                  return conn.tooling.update('ApexClassMember', acmId, {
+                    'Body': grunt.file.read(filepath)
+                  });
                 }
-                grunt.log.writeln('inserted acm for class '+class_name+' new id is '+new_id);
-                return new_id;
-              }, function(err){
-                grunt.fail.fatal('error inserting junction object: '+err);
+
+                grunt.log.writeln('creating classmember');
+                return conn.tooling.insert('ApexClassMember', {
+                  'MetadataContainerId': data.containerId,
+                  'ContentEntityId': classId,
+                  'Body': grunt.file.read(filepath)
+                }).then(function(new_id) {
+                  if ( !new_id ) {
+                    grunt.fail.fatal('error inserting junction object');
+                  }
+                  grunt.log.writeln('inserted acm for class '+class_name+' new id is '+new_id);
+                  return new_id;
+                }, function(err){
+                  grunt.fail.fatal('error inserting junction object: '+err);
+                });
               });
             })
           );
