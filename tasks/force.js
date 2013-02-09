@@ -17,9 +17,13 @@ module.exports = function(grunt) {
 
     grunt.log.writeln('force plugin executing task '+sftask);
 
-    if ( sftask !== 'deploy' ) {
+    if ( sftask !== 'deploy' && sftask !== 'validate' ) {
       grunt.fail.warn('unknown task');
       return 42;
+    }
+
+    if ( sftask === 'validate' ) {
+      options.isCheck = true;
     }
 
     login(options).then(function(conn) {
@@ -112,10 +116,10 @@ module.exports = function(grunt) {
 
       grunt.log.writeln('submitting deployment request');
 
-      return conn.tooling.deploy(data.containerId);
+      return conn.tooling.deploy(data.containerId, options.isCheck);
     }).then(function(results) {
 
-      grunt.log.writeln('deployment complete');
+      grunt.log.writeln( (options.isCheck?'validation':'deployment') + ' complete');
     });
   }
 
