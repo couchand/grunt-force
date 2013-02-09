@@ -49,6 +49,11 @@ grunt.initConfig({
 
 ### Options
 
+#### options.container
+Type: `String`
+
+The name of the `MetadataContainer` to use for deployments with the Tooling API.
+
 #### options.credentials
 Type: `File`
 
