@@ -18,13 +18,13 @@ module.exports = function(grunt) {
         tests: '*Test.cls'
       },
       staging: {
-        src: ['src/**.cls'],
+        src: ['src/classes/*.cls'],
         options: {
           credentials: 'creds/staging.json'
         }
       },
       production: {
-        src: ['src/**.cls'],
+        src: ['src/classes/*.cls'],
         options: {
           credentials: 'creds/production.json'
         }
@@ -41,7 +41,7 @@ module.exports = function(grunt) {
   grunt.registerTask('runTests', ['force:production:test']);
 
   grunt.registerTask('push', ['force:staging:deploy']);
-  grunt.registerTask('test', ['force:staging:deploy'])
+  grunt.registerTask('test', ['force:staging:test'])
 
   // By default, push and run all tests.
   grunt.registerTask('default', ['push', 'test']);
