@@ -20,7 +20,7 @@ public class Foobar
 
 	public void setValue( String message )
 	{
-		System.debug( \'foobar - \' + message );
+		System.debug( 'foobar - ' + message );
 //		this.message = message;
 	}
 }
