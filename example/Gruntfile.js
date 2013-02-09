@@ -43,6 +43,9 @@ module.exports = function(grunt) {
   grunt.registerTask('push', ['force:staging:deploy']);
   grunt.registerTask('test', ['force:staging:test'])
 
+  grunt.registerTask('listSObjects', ['force:staging:get:sobjects']);
+  grunt.registerTask('getLeads', ['force:staging:get:query?q=select+id,name+from+lead']);
+
   // By default, push and run all tests.
   grunt.registerTask('default', ['push', 'test']);
 
