@@ -37,13 +37,13 @@ module.exports = function(grunt) {
       staging: {
         src: ['test/fixtures/*.cls'],
         options: {
-          credentials: 'test/creds/staging.js'
+          credentials: 'test/creds/staging.json'
         }
       },
       production: {
         src: ['test/fixtures/*.cls'],
         options: {
-          credentials: 'test/creds/production.js'
+          credentials: 'test/creds/production.json'
         }
       },
     },

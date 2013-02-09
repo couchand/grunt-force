@@ -46,9 +46,7 @@ module.exports = function(grunt) {
     grunt.log.writeln('loading credentials from '+options.credentials);
 
     var credfile = grunt.file.read(options.credentials);
-    var module = {};
-    eval(credfile);
-    var creds = module.exports;
+    var creds = JSON.parse(credfile);
 
     grunt.log.writeln('logging in to '+creds.login_url+' as '+creds.username);
 
