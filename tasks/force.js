@@ -143,9 +143,22 @@ module.exports = function(grunt) {
 
           junctionInserts.push(
             conn.query('select Id from ApexClass where Name = \''+class_name+"'").then(function(classes) {
-              var classId = classes[0].Id;
-              grunt.log.writeln('found class '+class_name+' with id '+classId);
-
+              if ( classes && classes.length ) {
+                var classId = classes[0].Id;
+                grunt.log.writeln('found class '+class_name+' with id '+classId);
+                return classId;
+              }
+              else {
+                grunt.log.writeln('creating apex class '+class_name);
+                return conn.tooling.insert('ApexClass',{
+                  'Name': class_name,
+                  'Body': 'public class ' + class_name + ' {}'
+                }).then(function(new_id) {
+                  grunt.log.writeln('successfully created new ApexClass '+class_name + ' ' + new_id);
+                  return new_id;
+                });
+              }
+            }).then(function(classId) {
               grunt.log.writeln('searching for classmember');
               return conn.tooling.query('select Id from ApexClassMember where MetadataContainerId = \'' +
                                   data.containerId + '\' and ContentEntityId = \'' + classId + "'").then(function(acms) {
