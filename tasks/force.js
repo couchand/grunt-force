@@ -10,41 +10,74 @@
 
 module.exports = function(grunt) {
 
-  // Please see the grunt documentation for more information regarding task
-  // creation: https://github.com/gruntjs/grunt/blob/devel/docs/toc.md
+  grunt.registerMultiTask('force', 'Interact with a Salesforce.com environment', function(sftask) {
+    var done = this.async();
+    var options = this.options();
+    var sfdc = require('../lib/force-0.1.0.js');
+    var promise = require('node-promise');
 
-  grunt.registerMultiTask('force', 'Your task description goes here.', function() {
-    // Merge task-specific and/or target-specific options with these defaults.
-    var options = this.options({
-      punctuation: '.',
-      separator: ', '
-    });
+    var files = grunt.file.expand(grunt.config.get('force.'+this.target+'.all'));
+    if ( !files || files.length == 0 ) {
+      return;
+    }
 
-    // Iterate over all specified file groups.
-    this.files.forEach(function(fileObj) {
-      // The source files to be concatenated. The "nonull" option is used
-      // to retain invalid files/patterns so they can be warned about.
-      var files = grunt.file.expand({nonull: true}, fileObj.src);
+    grunt.log.writeln('force plugin executing task '+sftask);
+    grunt.log.writeln('loading credentials from '+options.credentials);
 
-      // Concat specified files.
-      var src = files.map(function(filepath) {
-        // Warn if a source file/pattern was invalid.
-        if (!grunt.file.exists(filepath)) {
-          grunt.log.error('Source file "' + filepath + '" not found.');
-          return '';
-        }
-        // Read file source.
-        return grunt.file.read(filepath);
-      }).join(options.separator);
+    var credfile = grunt.file.read(options.credentials);
+    var module = {};
+    eval(credfile);
+    var creds = module.exports;
 
-      // Handle options.
-      src += options.punctuation;
+    grunt.log.writeln('logging in to '+creds.login_url+' as '+creds.username);
 
-      // Write the destination file.
-      grunt.file.write(fileObj.dest, src);
+    if ( sftask !== 'deploy' ) {
+      grunt.fail.warn('unknown task');
+      return 42;
+    }
 
-      // Print a success message.
-      grunt.log.writeln('File "' + fileObj.dest + '" created.');
+    var conn;
+    var data = {};
+
+    sfdc.connect(creds).then(function(c) {
+      grunt.log.writeln('logged in successfully');
+      conn = c;
+
+      return conn.tooling.insert('MetadataContainer',{'Name':'itefdsjkfdjstContainer'});
+    }).then(function(new_id) {
+
+      data.containerId = new_id;
+      var junctionInserts = [];
+
+      grunt.log.writeln('created MetadataContainer with Id '+new_id);
+      grunt.log.writeln('should be creating junction objects now...');
+
+      function newClassMember(file) {
+        var className = file.match(/\/([^\/]*)\.cls/)[1];
+        return conn.query('select Id from ApexClass where Name = \''+className+"'").then(function(classes) {
+          var classId = classes[0].Id;
+          return conn.insert('ApexClassMember', {
+          'MetadataContainerId': data.containerId,
+          'ContentEntityId': classId,
+          'Body': grunt.file.read(file)
+          })
+        });
+      }
+
+      for ( var i = 0; i < files.length; i++ ) {
+        grunt.log.writeln('adding file '+files[i]);
+        junctionInserts.push(newClassMember(files[i]));
+      }
+
+      return promise.all.apply(promise, junctionInserts);
+    }).then(function(new_members) {
+      grunt.log.writeln('submitting deployment request');
+
+      return conn.tooling.deploy(data.containerId);
+    }).then(function(results) {
+
+      grunt.log.writeln('deployment complete');
+      done();
     });
   });
 
