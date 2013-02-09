@@ -67,6 +67,10 @@ module.exports = function(grunt) {
   // plugin's task(s), then test the result.
   grunt.registerTask('test', ['clean', 'force', 'nodeunit']);
 
+  grunt.registerTask('validate', ['force:production:validate']);
+  grunt.registerTask('deploy', ['force:production:deploy']);
+  grunt.registerTask('runTests', ['force:production:test']);
+
   // By default, lint and run all tests.
   grunt.registerTask('default', ['jshint', 'test']);
 
