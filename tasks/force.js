@@ -13,11 +13,23 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('force', 'Interact with a Salesforce.com environment', function(sftask) {
     var done = this.async();
     var options = this.options();
-    var sfdc = require('../lib/force-0.1.0.js');
-    var promise = require('node-promise');
     var file_groups = this.files;
 
     grunt.log.writeln('force plugin executing task '+sftask);
+
+    if ( sftask !== 'deploy' ) {
+      grunt.fail.warn('unknown task');
+      return 42;
+    }
+
+    login(options).then(function(conn) {
+      return deploy(conn, file_groups, options);
+    }).then(done);
+  });
+
+  function login(options) {
+    var sfdc = require('../lib/force-0.1.0.js');
+
     grunt.log.writeln('loading credentials from '+options.credentials);
 
     var credfile = grunt.file.read(options.credentials);
@@ -27,21 +39,19 @@ module.exports = function(grunt) {
 
     grunt.log.writeln('logging in to '+creds.login_url+' as '+creds.username);
 
-    if ( sftask !== 'deploy' ) {
-      grunt.fail.warn('unknown task');
-      return 42;
-    }
+    return sfdc.connect(creds).then(function(c) {
+      grunt.log.writeln('logged in successfully');
+      return c;
+    });
+  }
 
-    var conn;
+  function deploy(conn, file_groups, options) {
+    var promise = require('node-promise');
     var data = {};
 
-    sfdc.connect(creds).then(function(c) {
-      grunt.log.writeln('logged in successfully');
-      conn = c;
+    grunt.log.writeln('looking for container');
 
-      grunt.log.writeln('looking for container');
-      return conn.tooling.query('select Id from MetadataContainer where Name = \'' + options.container + "'");
-    }).then(function(containers) {
+    return conn.tooling.query('select Id from MetadataContainer where Name = \'' + options.container + "'").then(function(containers) {
       if ( containers && containers.length ) {
         grunt.log.writeln('found container');
         // found container, use it
@@ -106,8 +116,7 @@ module.exports = function(grunt) {
     }).then(function(results) {
 
       grunt.log.writeln('deployment complete');
-      done();
     });
-  });
+  }
 
 };
