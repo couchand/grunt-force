@@ -78,13 +78,22 @@ module.exports = function(grunt) {
     });
 
     return promise.allOrNone.apply(promise, testRuns).then(function(runs) {
+      var success = true;
       runs.forEach(function(results) {
         results.forEach(function(res) {
+          success = success && res.Outcome === 'Pass';
+          var stack_trace = res.StackTrace && res.StackTrace.replace(/\n/g, "\n > ");
           var test_result = 'Test ' + res.ApexClass.Name + '.' + res.MethodName + ': ' + res.Outcome +
-                            (res.Outcome !== 'Pass' ? "\n" + res.Message + '. ' + res.StackTrace : '');
+                            (res.Outcome !== 'Pass' ? ' - ' + res.Message + '.\n > ' + stack_trace : '');
           grunt.log.writeln(test_result);
         });
       });
+      if ( success ) {
+        grunt.log.writeln('All tests pass.');
+      }
+      else {
+        grunt.fail.warn('test failures.');
+      }
     });
   }
 
@@ -185,7 +194,7 @@ module.exports = function(grunt) {
       if ( e.CompilerErrors && compile.length ) {
         for ( i = 0; i < compile.length; i++ ) {
           err = compile[i];
-          errors += 'Saleforce.com CompilerError: ' + err.extent + ' ' + err.name + ' (line ' + err.line + '): ' + err.problem + "\n";
+          errors += 'CompilerError: ' + err.extent + ' ' + err.name + ' (line ' + err.line + '): ' + err.problem + "\n";
         }
       }
 
