@@ -1,0 +1,9 @@
+{
+  "login_url": "staging_login",
+  "resource_url": "staging_resource",
+  "client_key": "staging_key",
+  "client_secret": "staging_secret",
+  "username": "user@staging.com",
+  "password": "staging_password",
+  "token": "staging_token"
+}

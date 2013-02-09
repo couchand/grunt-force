@@ -1,0 +1,9 @@
+{
+  "login_url": "production_login",
+  "resource_url": "production_resource",
+  "client_key": "production_key",
+  "client_secret": "production_secret",
+  "username": "user@production.com",
+  "password": "production_password",
+  "token": "production_token"
+}
