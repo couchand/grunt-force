@@ -111,21 +111,27 @@ module.exports = function(grunt) {
                 'MetadataContainerId': data.containerId,
                 'ContentEntityId': data.classId,
                 'Body': grunt.file.read(filepath)
+              }).then(function(new_id) {
+                if ( !new_id ) {
+                  grunt.fail.fatal('error inserting junction object');
+                }
+                grunt.log.writeln('inserted acm for class '+class_name+' new id is '+new_id);
+                return new_id;
+              }, function(err){
+                grunt.fail.fatal('error inserting junction object: '+err);
               });
             })
           );
         });
       });
 
+      grunt.log.writeln('added ' + junctionInserts.length + ' classes');
       grunt.log.writeln('waiting for all adds to complete');
 
       return promise.all.apply(promise, junctionInserts);
     }).then(function(new_members) {
+      grunt.log.writeln('added '+new_members.length);
       grunt.log.writeln('all adds complete');
-
-      new_members.map(function(member) {
-        grunt.log.writeln('new member id' + member);
-      });
 
       grunt.log.writeln('submitting deployment request');
 
@@ -133,6 +139,23 @@ module.exports = function(grunt) {
     }).then(function(results) {
 
       grunt.log.writeln( (options.isCheck?'validation':'deployment') + ' complete');
+    }, function(e) {
+      var errors = '', i, err;
+
+      var compile = e.CompilerErrors && JSON.parse( e.CompilerErrors );
+
+      if ( e.CompilerErrors && compile.length ) {
+        for ( i = 0; i < compile.length; i++ ) {
+          err = compile[i];
+          errors += 'Saleforce.com CompilerError: ' + err.extent + ' ' + err.name + ' (line ' + err.line + '): ' + err.problem + "\n";
+        }
+      }
+
+      if ( e.ErrorMsg ) {
+        errors = e.ErrorMsg + "\n" + errors;
+      }
+
+      grunt.fail.fatal( errors );
     });
   }
 
